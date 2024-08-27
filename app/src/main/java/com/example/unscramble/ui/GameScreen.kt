@@ -15,6 +15,7 @@
  */
 package com.example.unscramble.ui
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +44,9 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,10 +82,13 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
         )
         GameLayout(
             currentScrambledWord = gameUiState.currentScrambledWord,
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(mediumPadding)
+            userGuess = gameViewModel.userGuess,
+            onUserGuessChanged = {userGuess:String ->
+                                    gameViewModel.updateUserGuess(userGuess)
+                                 },
+            onKeyboardDone = { gameViewModel.checkUserGuess() },
+            isGuessWrong = gameUiState.isGuessedWordWrong,
+            wordCount = gameUiState.currentWordCount,
         )
         Column(
             modifier = Modifier
@@ -93,7 +100,7 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { }
+                onClick = { gameViewModel.checkUserGuess() }
             ) {
                 Text(
                     text = stringResource(R.string.submit),
@@ -102,7 +109,7 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
             }
 
             OutlinedButton(
-                onClick = { },
+                onClick = {gameViewModel.skipWord() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
@@ -112,7 +119,7 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
             }
         }
 
-        GameStatus(score = 0, modifier = Modifier.padding(20.dp))
+        GameStatus(score = gameUiState.score, modifier = Modifier.padding(20.dp))
     }
 }
 
@@ -129,10 +136,16 @@ fun GameStatus(score: Int, modifier: Modifier = Modifier) {
     }
 }
 
+
 @Composable
 fun GameLayout(
-    modifier: Modifier = Modifier,
-    currentScrambledWord: String
+    onUserGuessChanged: (String) -> Unit,
+    onKeyboardDone: () -> Unit,
+    wordCount: Int,
+    currentScrambledWord: String,
+    isGuessWrong: Boolean,
+    userGuess: String,
+    modifier: Modifier = Modifier
 ) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
@@ -151,7 +164,7 @@ fun GameLayout(
                         .background(colorScheme.surfaceTint)
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                         .align(alignment = Alignment.End),
-                    text = stringResource(R.string.word_count, 0),
+                    text = stringResource(R.string.word_count, wordCount),
                     style = typography.titleMedium,
                     color = colorScheme.onPrimary
                 )
@@ -165,27 +178,29 @@ fun GameLayout(
                     textAlign = TextAlign.Center,
                     style = typography.titleMedium
                 )
+
                 OutlinedTextField(
-                    value = "",
+                    value = userGuess,
+                    onValueChange = { newText -> onUserGuessChanged(newText) },
                     singleLine = true,
-                    shape = shapes.large,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = colorScheme.surface,
-                        unfocusedContainerColor = colorScheme.surface,
-                        disabledContainerColor = colorScheme.surface,
-                    ),
-                    onValueChange = { },
-                    label = { Text(stringResource(R.string.enter_your_word)) },
-                    isError = false,
+                    label = {
+                        if (isGuessWrong) {
+                            Text(stringResource(R.string.wrong_guess))
+                        } else {
+                            Text(stringResource(R.string.enter_your_word))
+                        }
+                    },
+                    isError = isGuessWrong,
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = { }
-                    )
+                        onDone = { onKeyboardDone() }
+                    ),
                 )
             }
+
         }
     }
 
@@ -235,3 +250,4 @@ fun GameScreenPreview() {
         GameScreen()
     }
 }
+
