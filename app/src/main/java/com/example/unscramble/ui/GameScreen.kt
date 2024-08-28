@@ -75,6 +75,12 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (gameUiState.isGameOver) {
+            FinalScoreDialog(
+                score = gameUiState.score,
+                onPlayAgain = { gameViewModel.resetGame() }
+            )
+        }
 
         Text(
             text = stringResource(R.string.app_name),
@@ -83,9 +89,9 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
         GameLayout(
             currentScrambledWord = gameUiState.currentScrambledWord,
             userGuess = gameViewModel.userGuess,
-            onUserGuessChanged = {userGuess:String ->
-                                    gameViewModel.updateUserGuess(userGuess)
-                                 },
+            onUserGuessChanged = { userGuess: String ->
+                gameViewModel.updateUserGuess(userGuess)
+            },
             onKeyboardDone = { gameViewModel.checkUserGuess() },
             isGuessWrong = gameUiState.isGuessedWordWrong,
             wordCount = gameUiState.currentWordCount,
@@ -109,7 +115,7 @@ fun GameScreen(gameViewModel: GameViewModel = viewModel()) {
             }
 
             OutlinedButton(
-                onClick = {gameViewModel.skipWord() },
+                onClick = { gameViewModel.skipWord() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
@@ -149,62 +155,60 @@ fun GameLayout(
 ) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
-        Card(
-            modifier = modifier,
-            elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+    Card(
+        modifier = modifier,
+        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(mediumPadding)
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(mediumPadding)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .clip(shapes.medium)
-                        .background(colorScheme.surfaceTint)
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                        .align(alignment = Alignment.End),
-                    text = stringResource(R.string.word_count, wordCount),
-                    style = typography.titleMedium,
-                    color = colorScheme.onPrimary
-                )
-                Text(
-                        text = currentScrambledWord,
-                        fontSize = 45.sp,
-                )
+            Text(
+                modifier = Modifier
+                    .clip(shapes.medium)
+                    .background(colorScheme.surfaceTint)
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                    .align(alignment = Alignment.End),
+                text = stringResource(R.string.word_count, wordCount),
+                style = typography.titleMedium,
+                color = colorScheme.onPrimary
+            )
+            Text(
+                text = currentScrambledWord,
+                fontSize = 45.sp,
+            )
 
-                Text(
-                    text = stringResource(R.string.instructions),
-                    textAlign = TextAlign.Center,
-                    style = typography.titleMedium
-                )
+            Text(
+                text = stringResource(R.string.instructions),
+                textAlign = TextAlign.Center,
+                style = typography.titleMedium
+            )
 
-                OutlinedTextField(
-                    value = userGuess,
-                    onValueChange = { newText -> onUserGuessChanged(newText) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = {
-                        if (isGuessWrong) {
-                            Text(stringResource(R.string.wrong_guess))
-                        } else {
-                            Text(stringResource(R.string.enter_your_word))
-                        }
-                    },
-                    isError = isGuessWrong,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { onKeyboardDone() }
-                    ),
-                )
-            }
-
+            OutlinedTextField(
+                value = userGuess,
+                onValueChange = { newText -> onUserGuessChanged(newText) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                label = {
+                    if (isGuessWrong) {
+                        Text(stringResource(R.string.wrong_guess))
+                    } else {
+                        Text(stringResource(R.string.enter_your_word))
+                    }
+                },
+                isError = isGuessWrong,
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { onKeyboardDone() }
+                ),
+            )
         }
+
     }
-
-
+}
 
 /*
  * Creates and shows an AlertDialog with final score.
